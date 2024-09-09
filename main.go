@@ -13,7 +13,7 @@ type requestBody struct {
 
 var message string
 
-func PostMethod(w http.ResponseWriter, r *http.Request) {
+func PostMessage(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
@@ -23,18 +23,28 @@ func PostMethod(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 	}
 	message = reqBody.Message
+	DB.Create(&reqBody)
+
 }
 
-func GetMethod(w http.ResponseWriter, r *http.Request) {
+func GetMessage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Hello, %v", message)
 }
 
 func main() {
-	router := mux.NewRouter()
-	router.HandleFunc("/post", PostMethod).Methods("POST")
-	router.HandleFunc("/get", GetMethod).Methods("GET")
+	InitDB()
 
-	err := http.ListenAndServe(":8080", router)
+	err := DB.AutoMigrate(&Message{})
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	router := mux.NewRouter()
+	router.HandleFunc("/post", PostMessage).Methods("POST")
+	router.HandleFunc("/get", GetMessage).Methods("GET")
+
+	err = http.ListenAndServe(":8080", router)
 	if err != nil {
 		fmt.Println(err)
 	}
